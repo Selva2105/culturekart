@@ -13,7 +13,7 @@ const app = express();
 
 // CORS options
 const corsOptions = {
-    origin: ["http://localhost:3000", "https://ikart-six.vercel.app/"],
+    origin: ["http://localhost:3000", "https://ikart-six.vercel.app"],
     methods: "GET,PUT,PATCH,POST,DELETE",
     credentials: true,
 };
