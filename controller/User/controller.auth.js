@@ -48,7 +48,7 @@ const loginUser = AsyncErrorHandler(async (req, res, next) => {
     const token = SignToken(user._id);
 
     // 4. Send the token
-    res.status(200).json({
+    res.status(201).json({
         status: 'success',
         message: "User logged in sucessfully",
         token,
