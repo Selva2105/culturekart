@@ -106,6 +106,10 @@ userSchema.methods.generateUserVerifyToken = async function () {
     return VerifyToken;
 };
 
+// To login the user compare the user password with db password
+userSchema.methods.comparePasswordInDb = async function (password, passwordDb) {
+    return await bcrypt.compare(password, passwordDb);
+}
 const User = mongoose.model('user', userSchema);
 
 module.exports = User;
