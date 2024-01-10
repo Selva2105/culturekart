@@ -6,6 +6,6 @@ const protect = require("../middleware/protectMiddleware");
 const router = express.Router();
 
 router.route('/').post(CreateUser);
-router.get('/:id', protect, getUserDetailsById)
+router.get('/', protect, getUserDetailsById)
 
 module.exports = router
