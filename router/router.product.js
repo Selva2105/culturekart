@@ -13,9 +13,11 @@ const protect = require("../middleware/protectMiddleware");
 const router = express.Router();
 
 router.route("/").post(createProduct).get(getProducts);
-router.route("/category").get(getAllCaregory);
+router.route("/category").get(protect, getAllCaregory).patch(updateProduct);
 
-router.route("/:id").patch(protect, updateProduct).post(protect, addQuantityPrice).delete(protect, deleteQuantityPrice).delete(protect, deleteProduct);
-router.route("/:id/delete").delete(protect, deleteProduct);
+router.route("/:id")
+  .patch(protect, updateProduct)
+  .post(protect, addQuantityPrice)
+  .delete(protect, deleteQuantityPrice, deleteProduct);
 
 module.exports = router;

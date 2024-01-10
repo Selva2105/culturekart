@@ -1,3 +1,4 @@
+const RevokedToken = require("../../model/model.revokedTokens");
 const User = require("../../model/model.user");
 const SignToken = require("../../utils/SignToken");
 const AsyncErrorHandler = require("../../utils/asyncErrorHandler");
@@ -55,6 +56,13 @@ const loginUser = AsyncErrorHandler(async (req, res, next) => {
     })
 })
 
+const logoutUser = AsyncErrorHandler(async (req, res, next) => {
+    const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
 
+    // Add the token to the blacklist in the database
+    await RevokedToken.create({ token });
 
-module.exports = { CreateUser, loginUser }
+    res.status(200).json({ message: 'Logout successful' });
+})
+
+module.exports = { CreateUser, loginUser, logoutUser }
