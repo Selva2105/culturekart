@@ -56,4 +56,5 @@ const loginUser = AsyncErrorHandler(async (req, res, next) => {
 })
 
 
+
 module.exports = { CreateUser, loginUser }

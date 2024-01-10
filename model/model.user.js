@@ -106,6 +106,16 @@ userSchema.methods.generateUserVerifyToken = async function () {
     return VerifyToken;
 };
 
+// To invalidate the user token after user modify their password
+userSchema.methods.isPasswordModified = async function (JWTtimestamp) {
+    if (this.passwordChangedAt) {
+
+        const passwordChangedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+        return JWTtimestamp < passwordChangedTimestamp;
+    }
+    return false;
+}
+
 // To login the user compare the user password with db password
 userSchema.methods.comparePasswordInDb = async function (password, passwordDb) {
     return await bcrypt.compare(password, passwordDb);
