@@ -12,8 +12,8 @@ const protect = require("../middleware/protectMiddleware");
 
 const router = express.Router();
 
-router.route("/").post(createProduct).get(getProducts);
-router.route("/category").get(protect, getAllCaregory).patch(updateProduct);
+router.route("/").post(protect,createProduct).get(getProducts);
+router.route("/category").get(getAllCaregory).patch(protect, updateProduct);
 
 router.route("/:id")
   .patch(protect, updateProduct)
