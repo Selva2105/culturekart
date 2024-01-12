@@ -63,40 +63,21 @@ const emailTemplate = (url, name) => {
         </style>
     </head>
     <body>
-    <div class="container">
-        <img src="https://culturekart.vercel.app/server/logo.png" alt="Company Logo">
-        <h2>Hi ${name} our beloved Chief,</h2>
-        <p>Welcome to our exclusive community! We are honored to have you as a part of our journey.</p>
-        <p>As you embark on this experience, we want to express our gratitude for choosing IKart.</p>
-        <div class="link">
-        <a href="${url}" id="verificationLink" class="button" target="_blank">Click to verify</a>        
-        </div>
-        <p class="link-p">Click the above link to verify your account</p>
-        <p>Feel free to explore our offerings, and if you have any questions or need assistance, don't hesitate to reach out.</p>
-        <p>Thank you for trusting us. We look forward to exceeding your expectations!</p>
-        <p>Best Regards,<br>IKart</p>
-    </div>
-
-    <script>
-        document.getElementById('verificationLink').addEventListener('click', function(event) {
-            event.preventDefault();
-            fetch('${url}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({}),
-            })
-            .then(response => {
-                console.log('POST request successful', response);
-            })
-            .catch(error => {
-                console.error('Error making POST request', error);
-            });
-        });
-    </script>
-</body>
-</html>
+        <div class="container">
+            <img src="https://culturekart.vercel.app/server/logo.png" alt="Company Logo">
+            <h2>Hi ${name} our beloved Chief,</h2>
+            <p>Welcome to our exclusive community! We are honored to have you as a part of our journey.</p>
+            <p>As you embark on this experience, we want to express our gratitude for choosing IKart.</p>
+                <div class="link">
+                    <a href="${url}" class="button" target="_blank">Click to verify</a>
+                </div>
+            <p class="link-p">Click the above link to verify your account</p>
+            <p>Feel free to explore our offerings, and if you have any questions or need assistance, don't hesitate to reach out.</p>
+            <p>Thank you for trusting us. We look forward to exceeding your expectations!</p>
+            <p>Best Regards,<br>IKart</p>
+            </div>
+    </body>
+    </html>
 `
 }
 

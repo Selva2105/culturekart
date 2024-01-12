@@ -7,6 +7,6 @@ const router = express.Router();
 
 router.route('/').post(CreateUser);
 router.get('/', protect, getUserDetailsById)
-router.route('/verify/:token').post(verifyUser);
+router.route('/verify/:token').get(verifyUser);
 
 module.exports = router
