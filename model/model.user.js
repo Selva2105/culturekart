@@ -46,7 +46,7 @@ const userSchema = mongoose.Schema(
             required: [true, "Password is required"],
             min: 8,
             max: 15,
-            select: false, //to aviod anyone to see the password in response
+            select: false, 
             validate: {
                 validator: function (value) {
                     return /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/.test(value);
@@ -110,8 +110,7 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods.generateUserVerifyToken = async function () {
     const VerifyToken = crypto.randomBytes(32).toString('hex');
-    let expireTime = new Date();
-    expireTime.setMinutes(expireTime.getMinutes() + 10);
+    const expireTime = Date.now() + 24 * 60 * 60 * 1000;
 
     this.userVerifyToken = crypto.createHash('sha256').update(VerifyToken).digest('hex');
     this.userVerifyTokenExpire = expireTime;
