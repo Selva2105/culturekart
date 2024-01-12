@@ -11,6 +11,12 @@ const CreateUser = AsyncErrorHandler(async (req, res, next) => {
         return next(error);
     }
 
+    // 1. Accept the policy
+    // if(req.body.policyStatus === false){
+    //     const error = new CustomError("Accept the policy", 500);
+    //     return next(error);
+    // }
+
     // 2. Create new user
     const newUser = await User.create(req.body);
 

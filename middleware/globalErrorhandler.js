@@ -27,15 +27,36 @@ const produtionError = (res, error) => {
 const duplicateKeyErrorHandler = (err) => {
   let msg;
 
+  console.log("Error ", err);
+
   if (err.keyValue.userName) {
-    msg = `There is already a product with name : ${err.keyValue.userName} exists.`;
-  }
-  if (err.keyValue.email) {
+    msg = `There is already a product with name: ${err.keyValue.userName} exists.`;
+  } else if (err.keyValue.email) {
     msg = `There is already a user with email ${err.keyValue.email} exists.`;
+  } else if (err.keyValue.hasOwnProperty("phoneNumber.Number")) {
+    msg = `There is already a user with Phone number ${err.keyValue["phoneNumber.Number"]} exists.`;
+  } else {
+    // Handle the case where err.keyValue.phoneNumber is undefined
+    msg = "Duplicate key error, but specific field is missing.";
   }
 
   return new CustomError(msg, 400);
 };
+
+// 4. Function to handle validation errors
+const validationErrorHandler = (err) => {
+  const errors = Object.values(err.errors).map(val => {
+    return {
+      message: val.message,
+      value: val.value
+    };
+  });
+
+  const errorMessages = errors.map(error => `${error.message} ( ${error.value} )`).join(", ");
+  const msg = `Invalid input data: ${errorMessages}`;
+  return new CustomError(msg, 400);
+};
+
 
 module.exports = (error, req, res, next) => {
   error.statusCode = error.statusCode || 500;
@@ -47,6 +68,8 @@ module.exports = (error, req, res, next) => {
 
     // => If any duplicate key is find handle it here
     if (error.code === 11000) error = duplicateKeyErrorHandler(error);
+
+    if (error.name === "ValidationError") error = validationErrorHandler(error);
 
     produtionError(res, error);
   }

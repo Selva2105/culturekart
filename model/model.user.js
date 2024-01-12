@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
 const crypto = require('crypto');
+const CustomError = require('../utils/customError');
 
 const phoneNumberSchema = mongoose.Schema({
     CountryCode: {
@@ -63,6 +64,10 @@ const userSchema = mongoose.Schema(
                 message: "Passwords don't match"
             }
         },
+        policyStatus: {
+            type: Boolean,
+            enum: [true, false]
+        },
         verified: {
             type: Boolean,
             enum: [true, false],
@@ -94,6 +99,14 @@ userSchema.pre('save', async function (next) {
 
     return next();
 });
+
+userSchema.pre('save', async function (next) {
+
+    if (!this.policyStatus) {
+        const error = new CustomError("Accept the company policy", 500);
+        return next(error);
+    }
+})
 
 userSchema.methods.generateUserVerifyToken = async function () {
     const VerifyToken = crypto.randomBytes(32).toString('hex');
