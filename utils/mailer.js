@@ -7,8 +7,7 @@ const sendMail = async (mailOptions) => {
         service: 'gmail',
         host: "smtp.gmail.com",
         port: 587,
-        secure: true,
-        secure: true,
+        secure: false,
         auth: {
             user: process.env.ADMIN_MAIL,
             pass: process.env.ADMIN_MAIL_PASSKEY,

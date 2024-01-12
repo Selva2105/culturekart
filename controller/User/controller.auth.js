@@ -104,7 +104,6 @@ const verifyUser = AsyncErrorHandler(async (req, res, next) => {
     if (updatedUser.verified) {
         // Send the email-result.html file as a response
         const filePath = path.join(__dirname, '../', '../', 'view', 'email-result.html');
-        console.log("Path ", filePath);
         return res.sendFile(filePath);
     } else {
         const error = new CustomError('User verification failed', 500);
