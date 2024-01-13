@@ -46,7 +46,7 @@ const userSchema = mongoose.Schema(
             required: [true, "Password is required"],
             min: 8,
             max: 15,
-            select: false, 
+            select: false,
             validate: {
                 validator: function (value) {
                     return /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/.test(value);
@@ -73,6 +73,36 @@ const userSchema = mongoose.Schema(
             enum: [true, false],
             default: false
         },
+        wishlist: [
+            {
+                product: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Product',
+                }
+            }
+        ],
+        cart: [
+            {
+                product: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Product',
+                    required: true,
+                },
+                size: {
+                    type: String,
+                    required: true,
+                },
+                count: {
+                    type: Number,
+                    required: true,
+                    default: 1,
+                },
+                price: {
+                    type: Number,
+                    required: true,
+                },
+            }
+        ],
         passwordChangedAt: Date,
         passwordResetToken: String,
         passwordResetTokenExpire: Date,
@@ -90,15 +120,16 @@ const userSchema = mongoose.Schema(
 
 
 userSchema.pre('save', async function (next) {
-    if (this.isModified('password')) return next();
+    if (!this.isModified('password')) return next();
 
-    this.password = await bcrypt.hash(this.password, 10);
+    //encrypt the password befor creating it...
+    this.password = await bcrypt.hash(this.password, 12);
 
     this.confirmPassword = undefined;
     this.lastUpdate = Date.now();
-
-    return next();
+    next();
 });
+
 
 userSchema.pre('save', async function (next) {
 
@@ -118,6 +149,14 @@ userSchema.methods.generateUserVerifyToken = async function () {
     return VerifyToken;
 };
 
+userSchema.methods.markAsVerified = async function () {
+    this.verified = true;
+    this.userVerifyToken = undefined;
+    this.userVerifyTokenExpire = undefined;
+
+    await this.save({ validateBeforeSave: false });
+};
+
 // To invalidate the user token after user modify their password
 userSchema.methods.isPasswordModified = async function (JWTtimestamp) {
     if (this.passwordChangedAt) {
@@ -132,6 +171,64 @@ userSchema.methods.isPasswordModified = async function (JWTtimestamp) {
 userSchema.methods.comparePasswordInDb = async function (password, passwordDb) {
     return await bcrypt.compare(password, passwordDb);
 }
+
+userSchema.methods.updateWishlist = async function (productId, action) {
+    try {
+        if (action === 'add') {
+            // Check if the product ID is already in the wishlist
+            if (!this.wishlist.some(item => item.product.equals(productId))) {
+                this.wishlist.push({ product: productId });
+            }
+
+            return "Added successfully"
+        } else if (action === 'remove') {
+            this.wishlist = this.wishlist.filter(item => !item.product.equals(productId));
+            return "Removed successfully"
+
+        } else {
+            throw new CustomError("Invalid action. Use 'add' or 'remove'.", 400);
+        }
+
+        await this.save({ validateBeforeSave: false });
+    } catch (error) {
+        throw error;
+    }
+};
+
+userSchema.methods.updateCart = async function (productId, size, quantity, price, action) {
+    try {
+        const existingCartItem = this.cart.find(item => item.product.equals(productId) && item.size === size);
+
+        if (action === 'add') {
+            if (existingCartItem) {
+                // If the product with the same size already exists, update the quantity
+                existingCartItem.quantity += quantity;
+            } else {
+                // If the product with the same size doesn't exist, add it to the cart
+                this.cart.push({ product: productId, size, quantity, price });
+            }
+            return "Added to cart successfully";
+        } else if (action === 'remove') {
+            if (existingCartItem) {
+                // If the product with the same size exists, decrease the quantity
+                existingCartItem.quantity -= quantity;
+                if (existingCartItem.quantity <= 0) {
+                    // If the quantity becomes zero or negative, remove the item from the cart
+                    this.cart = this.cart.filter(item => !(item.product.equals(productId) && item.size === size));
+                }
+            }
+            return "Removed from cart successfully";
+        } else {
+            throw new CustomError("Invalid action. Use 'add' or 'remove'.", 400);
+        }
+
+        await this.save({ validateBeforeSave: false });
+    } catch (error) {
+        throw error;
+    }
+};
+
+
 const User = mongoose.model('user', userSchema);
 
 module.exports = User;

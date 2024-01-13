@@ -1,3 +1,4 @@
+const { log } = require("console");
 const RevokedToken = require("../../model/model.revokedTokens");
 const User = require("../../model/model.user");
 const SignToken = require("../../utils/SignToken");
@@ -33,6 +34,8 @@ const CreateUser = AsyncErrorHandler(async (req, res, next) => {
         html: emailTemplate(`https://culturekart.vercel.app/api/v1/user/verify/${verifyToken}`, newUser.userName),
     }
 
+    console.log("Token", verifyToken);
+
     await sendMail(mailOptions)
 
     res.status(201).json({
@@ -43,34 +46,37 @@ const CreateUser = AsyncErrorHandler(async (req, res, next) => {
 })
 
 const loginUser = AsyncErrorHandler(async (req, res, next) => {
-
     const { email, password } = req.body;
 
-
-    // 1. Check both email and password is received from request
+    // 1. Check both email and password are received from the request
     if (!email || !password) {
         const error = new CustomError('Please provide email and password', 400);
-        return next(error)
+        return next(error);
     }
 
-    // 2. Find if user is exist and password match...
-    const user = await User.findOne({ email }).select('+password'); // to get the password also use select
+    const user = await User.findOne({ email }).select('+password'); // Include '+password' projection
 
-    if (!user || !(await user.comparePasswordInDb(password, user.password))) {
+    // 3. Check if the user and password match
+    const isPasswordMatch = await user.comparePasswordInDb(password, user.password);
+
+    console.log('Password Match:', isPasswordMatch);
+
+    if (!user || !isPasswordMatch) {
         const error = new CustomError('Incorrect email or password', 400);
         return next(error);
     }
 
-    // 3. Generate the token for logging in
+    // 4. Generate the token for logging in
     const token = SignToken(user._id);
 
-    // 4. Send the token
+    // 5. Send the token
     res.status(201).json({
         status: 'success',
-        message: "User logged in sucessfully",
+        message: 'User logged in successfully',
         token,
-    })
-})
+    });
+});
+
 
 const logoutUser = AsyncErrorHandler(async (req, res, next) => {
     const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
@@ -86,22 +92,18 @@ const verifyUser = AsyncErrorHandler(async (req, res, next) => {
     const decryptedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
 
     // 2. Finding the user and checking if the user's token is still valid
-    const user = await User.findOne({ userVerifyToken: decryptedToken }).select('+password');
+    const user = await User.findOne({ userVerifyToken: decryptedToken });
 
     if (!user || user.userVerifyTokenExpire < Date.now()) {
         const error = new CustomError('Token is invalid or expired', 400);
         return next(error);
     }
 
-    // 3. Change the verified status to TRUE
-    user.userVerifyToken = undefined;
-    user.userVerifyTokenExpire = undefined;
-    user.verified = true;
-
-    const updatedUser = await user.save({ validateBeforeSave: false });
+    // 3. Mark the user as verified
+    await user.markAsVerified();
 
     // 4. Check if the user's verified status has turned to true after saving changes
-    if (updatedUser.verified) {
+    if (user.verified) {
         // Send the email-result.html file as a response
         const filePath = path.join(__dirname, '../', '../', 'view', 'email-result.html');
         return res.sendFile(filePath);
@@ -110,5 +112,7 @@ const verifyUser = AsyncErrorHandler(async (req, res, next) => {
         return next(error);
     }
 });
+
+
 
 module.exports = { CreateUser, loginUser, logoutUser, verifyUser }
