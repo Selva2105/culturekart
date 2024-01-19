@@ -172,61 +172,73 @@ userSchema.methods.comparePasswordInDb = async function (password, passwordDb) {
     return await bcrypt.compare(password, passwordDb);
 }
 
-userSchema.methods.updateWishlist = async function (productId, action) {
+userSchema.methods.updateWishlist = async function (productId) {
     try {
-        if (action === 'add') {
-            // Check if the product ID is already in the wishlist
-            if (!this.wishlist.some(item => item.product.equals(productId))) {
-                this.wishlist.push({ product: productId });
-            }
+        // Check if the product ID is already in the wishlist
+        const existingItemIndex = this.wishlist.findIndex(item => item.product.equals(productId));
 
-            return "Added successfully"
-        } else if (action === 'remove') {
-            this.wishlist = this.wishlist.filter(item => !item.product.equals(productId));
-            return "Removed successfully"
-
+        if (existingItemIndex !== -1) {
+            // If the product is already in the wishlist, remove it
+            this.wishlist.splice(existingItemIndex, 1);
+            await this.save({ validateBeforeSave: false });  // Save changes here
+            return "Removed successfully";
         } else {
-            throw new CustomError("Invalid action. Use 'add' or 'remove'.", 400);
+            // If the product is not in the wishlist, add it
+            this.wishlist.push({ product: productId });
+            await this.save({ validateBeforeSave: false });  // Save changes here
+            return "Added successfully";
         }
-
-        await this.save({ validateBeforeSave: false });
     } catch (error) {
         throw error;
     }
 };
 
-userSchema.methods.updateCart = async function (productId, size, quantity, price, action) {
+userSchema.methods.addCart = async function ({ productId, count, action }) {
     try {
-        const existingCartItem = this.cart.find(item => item.product.equals(productId) && item.size === size);
+        const existingCartItemIndex = this.cart.findIndex(item => item.product.equals(productId));
 
         if (action === 'add') {
-            if (existingCartItem) {
-                // If the product with the same size already exists, update the quantity
-                existingCartItem.quantity += quantity;
+            if (existingCartItemIndex !== -1) {
+                // If the product already exists, update the count
+                this.cart[existingCartItemIndex].count = count;
             } else {
-                // If the product with the same size doesn't exist, add it to the cart
-                this.cart.push({ product: productId, size, quantity, price });
+                // If the product doesn't exist, add it to the cart
+                this.cart.push({ product: productId, count });
             }
-            return "Added to cart successfully";
         } else if (action === 'remove') {
-            if (existingCartItem) {
-                // If the product with the same size exists, decrease the quantity
-                existingCartItem.quantity -= quantity;
-                if (existingCartItem.quantity <= 0) {
-                    // If the quantity becomes zero or negative, remove the item from the cart
-                    this.cart = this.cart.filter(item => !(item.product.equals(productId) && item.size === size));
+            if (existingCartItemIndex !== -1) {
+                // If the product exists, decrease the count
+                this.cart[existingCartItemIndex].count = 0;
+                if (this.cart[existingCartItemIndex].count <= 0) {
+                    // If the count becomes zero or negative, remove the item from the cart
+                    this.cart.splice(existingCartItemIndex, 1);
                 }
+            } else {
+                return "Product not found in cart";
             }
-            return "Removed from cart successfully";
         } else {
             throw new CustomError("Invalid action. Use 'add' or 'remove'.", 400);
         }
 
-        await this.save({ validateBeforeSave: false });
+        // Remove items from the cart where count is zero or negative
+        this.cart = this.cart.filter(item => item.count > 0);
+
+        await this.save({ validateBeforeSave: false });  // Save changes here
+
+        if (action === 'add') {
+            if (existingCartItemIndex !== -1) {
+                return "Updated count in cart successfully";
+            } else {
+                return "Added to cart successfully";
+            }
+        } else {
+            return "Removed from cart successfully";
+        }
     } catch (error) {
         throw error;
     }
 };
+
 
 
 const User = mongoose.model('user', userSchema);
