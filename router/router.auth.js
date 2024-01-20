@@ -1,5 +1,4 @@
 const express = require("express");
-const { OAuth2Client } = require('google-auth-library')
 const { loginUser, logoutUser } = require("../controller/User/controller.auth");
 
 const router = express.Router();
