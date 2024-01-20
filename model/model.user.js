@@ -64,6 +64,10 @@ const userSchema = mongoose.Schema(
                 message: "Passwords don't match"
             }
         },
+        profileImage: {
+            type: String,
+            default: 'default-profile-image.jpg'
+        },
         policyStatus: {
             type: Boolean,
             enum: [true, false]
