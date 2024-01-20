@@ -36,20 +36,14 @@ const protect = asyncErrorHandler(async (req, res, next) => {
         next(error);
     }
 
-    // 4. Check if user is verified
-    if (!user.verified) {
-        const error = new CustomError('User not verified. Please verify to continue!', 401);
-        next(error);
-    }
-
-    // 5. If the user changed the password after the token was issued;
+    // 4. If the user changed the password after the token was issued;
     const isPasswordChanged = await user.isPasswordModified(decodedToken.iat);
     if (isPasswordChanged) {
         const error = new CustomError('Password has chnaged recently. Please login again !', 401);
         return next(error);
     }
 
-    // 6. Alllow the user to route
+    // 5. Alllow the user to route
     req.user = user;
     next();
 });
