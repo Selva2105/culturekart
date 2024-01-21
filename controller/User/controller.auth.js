@@ -101,7 +101,7 @@ const loginUser = AsyncErrorHandler(async (req, res, next) => {
     const user = await User.findOne({ email }).select('+password'); // Include '+password' projection
 
     // Check if the user and password match
-    const isPasswordMatch = await user.comparePasswordInDb(password, user.password);
+    const isPasswordMatch = user && await user.comparePasswordInDb(password, user.password);
 
     console.log('Password Match:', isPasswordMatch);
 
