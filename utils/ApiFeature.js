@@ -79,7 +79,7 @@ class ApiFeature {
      * Handles pagination based on the request query.
      * @returns {Object} - Current instance for method chaining.
      */
-    paginate() {
+    pagenate() {
         // Extract page and limit values from the query string (default to page 1 and limit 10 if not provided)
         const page = this.queryStr.page * 1 || 1;
         const limit = this.queryStr.limit * 1 || 10;

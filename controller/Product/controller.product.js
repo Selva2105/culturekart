@@ -42,7 +42,7 @@ const getProducts = AsyncErrorHandler(async (req, res, next) => {
 const getAllCaregory = AsyncErrorHandler(async (req, res, next) => {
   // 1. Get unique categories
   const categories = Product.schema.path('category').enumValues;
-  // 4. Respond with the product data along with unique categories
+  // 2. Respond with the product data along with unique categories
   res.status(201).json({
     status: "success",
     categories: categories,
