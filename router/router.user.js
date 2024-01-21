@@ -3,6 +3,7 @@ const { CreateUser, verifyUser } = require("../controller/User/controller.auth")
 const { getUserDetailsById, wishlistHandler, kartHandler } = require("../controller/User/controller.user");
 const protect = require("../middleware/protectMiddleware");
 const multer = require("multer");
+const verifiedUser = require("../middleware/verifiedUserMiddleware");
 
 // Create an instance of Express Router
 const router = express.Router();
