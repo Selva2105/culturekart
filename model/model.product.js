@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+// Define the product schema
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -57,7 +58,7 @@ const productSchema = new mongoose.Schema(
       {
         reviewer: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'User', 
+          ref: 'User', // Reference to the User model
           required: true
         },
         rating: Number,
@@ -65,15 +66,16 @@ const productSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true } // Add timestamps for createdAt and updatedAt
 );
 
-// Indexes
+// Indexes for better performance in queries
 productSchema.index({ name: 1 });
 productSchema.index({ category: 1 });
 productSchema.index({ "product_list.size": 1 });
 productSchema.index({ inStock: 1 });
 
+// Create the Product model
 const Product = mongoose.model("Product", productSchema);
 
 module.exports = Product;

@@ -12,11 +12,11 @@ const sendMail = require("../../utils/mailer");
 const emailTemplate = require("../../view/email-template")
 const { initializeApp } = require("firebase/app");
 const config = require('../../config/firebaseConfig');
+const { giveCurrentDateTime } = require("../../utils/dateUtils");
 
 initializeApp(config.firebaseConfig);
 
 const storage = getStorage();
-
 
 /**
  * Create a new user with optional profile image upload.
@@ -57,7 +57,7 @@ const CreateUser = AsyncErrorHandler(async (req, res, next) => {
     const mailOptions = {
         from: {
             name: "i Kart",
-            address: process.env.ADMIN_MAIL,
+            address: process.env.ADMIN_MAILID,
         },
         to: req.body.email,
         subject: "Verify your iKart Account",
@@ -93,8 +93,6 @@ const loginUser = AsyncErrorHandler(async (req, res, next) => {
 
     // Check if the user and password match
     const isPasswordMatch = user && await user.comparePasswordInDb(password, user.password);
-
-    console.log('Password Match:', isPasswordMatch);
 
     if (!user || !isPasswordMatch) {
         const error = new CustomError('Incorrect email or password', 400);
@@ -158,14 +156,5 @@ const verifyUser = AsyncErrorHandler(async (req, res, next) => {
         return next(error);
     }
 });
-
-const giveCurrentDateTime = () => {
-    const today = new Date();
-    const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-    const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-    const dateTime = date + ' ' + time;
-    return dateTime;
-}
-
 
 module.exports = { CreateUser, loginUser, logoutUser, verifyUser }
