@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const path = require('path');
-const fs = require('fs')
+const { ref, getDownloadURL, uploadBytesResumable } = require('firebase/storage');
+const { getStorage } = require("firebase/storage");
 
 const RevokedToken = require("../../model/model.revokedTokens");
 const User = require("../../model/model.user");
@@ -8,8 +9,14 @@ const SignToken = require("../../utils/SignToken");
 const AsyncErrorHandler = require("../../utils/asyncErrorHandler");
 const CustomError = require("../../utils/customError");
 const sendMail = require("../../utils/mailer");
-const emailTemplate = require("../../view/email-template");
-const { upload } = require("../../config/sinlgeMulterConfig");
+const emailTemplate = require("../../view/email-template")
+const { initializeApp } = require("firebase/app");
+const config = require('../../config/firebaseConfig');
+const { giveCurrentDateTime } = require("../../utils/dateUtils");
+
+initializeApp(config.firebaseConfig);
+
+const storage = getStorage();
 
 /**
  * Create a new user with optional profile image upload.
@@ -18,70 +25,54 @@ const { upload } = require("../../config/sinlgeMulterConfig");
  * @param {Function} next - Express next middleware function.
  */
 const CreateUser = AsyncErrorHandler(async (req, res, next) => {
-    // Use Multer to handle image upload
-    upload(req, res, async function (err) {
-        if (err) {
-            // Remove the uploaded image if any error occurs during multer
-            if (req.file) {
-                const imagePath = path.join('public/images/user', req.file.filename);
-                fs.unlinkSync(imagePath);
-            }
-            return next(err);
-        }
 
-        // Check if the request body is empty
-        if (Object.keys(req.body).length === 0) {
-            // Remove the uploaded image if any error occurs during user creation
-            if (req.file) {
-                const imagePath = path.join('public/images/user', req.file.filename);
-                fs.unlinkSync(imagePath);
-            }
-            const error = new CustomError('Give the required fields', 500);
-            return next(error);
-        }
+    // 1. Check the req body
+    if (Object.keys(req.body).length === 0) {
+        const error = new CustomError("Give the required fields", 500);
+        return next(error);
+    }
 
-        // Create new user with the uploaded image path or default image
-        const newUser = new User({
-            ...req.body,
-            profileImage: req.file ? `images/user/${req.file.filename}` : 'default-profile-image.jpg'
-        });
+    const dateTime = giveCurrentDateTime();
 
-        try {
-            await newUser.save();
-        } catch (error) {
-            // Remove the saved image if any error occurs during user creation
-            if (req.file) {
-                const imagePath = path.join('public/images/user', req.file.filename);
-                fs.unlinkSync(imagePath);
-            }
-            return next(error);
-        }
+    const storageRef = ref(storage, `images/user/${req.file.originalname + " " + dateTime}`);
 
-        // Generate access token and verify token and save it in the DB
-        const token = SignToken(newUser._id);
-        const verifyToken = await newUser.generateUserVerifyToken();
-        await newUser.save({ validateBeforeSave: false });
-        const mailOptions = {
-            from: {
-                name: "i Kart",
-                address: process.env.ADMIN_MAIL,
-            },
-            to: req.body.email,
-            subject: "Verify your iKart Account",
-            html: emailTemplate(`https://culturekart.vercel.app/api/v1/user/verify/${verifyToken}`, newUser.userName),
-        }
+    const metadata = {
+        contentType: req.file.mimetype,
+    };
 
-        console.log("Token", verifyToken);
+    const snapshot = await uploadBytesResumable(storageRef, req.file.buffer, metadata);
 
-        await sendMail(mailOptions)
+    const downloadURL = await getDownloadURL(snapshot.ref);
 
-        res.status(201).json({
-            status: 'success',
-            message: 'User created successfully',
-            token
-        });
+    // 2. Create new user
+    const newUser = await User.create({
+        ...req.body,
+        profileImage: downloadURL
+    });
+
+    // 3. Generate access token and verify token and save it in the DB
+    const token = SignToken(newUser._id);
+    const verifyToken = await newUser.generateUserVerifyToken();
+    await newUser.save({ validateBeforeSave: false });
+    const mailOptions = {
+        from: {
+            name: "i Kart",
+            address: process.env.ADMIN_MAILID,
+        },
+        to: req.body.email,
+        subject: "Verify your iKart Account",
+        html: emailTemplate(`https://culturekart.vercel.app/api/v1/user/verify/${verifyToken}`, newUser.userName),
+    };
+
+    await sendMail(mailOptions);
+
+    res.status(201).json({
+        status: 'success',
+        message: "User created successfully",
+        token
     });
 });
+
 
 /**
  * Authenticate a user and generate a login token.
@@ -101,9 +92,7 @@ const loginUser = AsyncErrorHandler(async (req, res, next) => {
     const user = await User.findOne({ email }).select('+password'); // Include '+password' projection
 
     // Check if the user and password match
-    const isPasswordMatch = await user.comparePasswordInDb(password, user.password);
-
-    console.log('Password Match:', isPasswordMatch);
+    const isPasswordMatch = user && await user.comparePasswordInDb(password, user.password);
 
     if (!user || !isPasswordMatch) {
         const error = new CustomError('Incorrect email or password', 400);

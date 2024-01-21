@@ -3,6 +3,13 @@ const ApiFeature = require("../../utils/ApiFeature");
 const AsyncErrorHandler = require("../../utils/asyncErrorHandler");
 const CustomError = require("../../utils/customError");
 
+/**
+ * Get a list of products with optional filtering, sorting, limiting, and pagination.
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 const getProducts = AsyncErrorHandler(async (req, res, next) => {
   // 1. Filter the data
   const products = new ApiFeature(Product.find(), req.query).filter().sort().limitFields().pagenate();
@@ -24,8 +31,15 @@ const getProducts = AsyncErrorHandler(async (req, res, next) => {
   });
 });
 
-const getAllCaregory = AsyncErrorHandler(async (req, res, next) => {
 
+/**
+ * Get a list of all unique product categories.
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
+const getAllCaregory = AsyncErrorHandler(async (req, res, next) => {
   // 1. Get unique categories
   const categories = Product.schema.path('category').enumValues;
   // 4. Respond with the product data along with unique categories
@@ -35,9 +49,14 @@ const getAllCaregory = AsyncErrorHandler(async (req, res, next) => {
   });
 })
 
-
+/**
+ * Create a new product.
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 const createProduct = AsyncErrorHandler(async (req, res, next) => {
-
   // 1. Destructure both required and optional fields from the request body
   const {
     name,
@@ -84,6 +103,13 @@ const createProduct = AsyncErrorHandler(async (req, res, next) => {
   });
 });
 
+/**
+ * Update an existing product by ID.
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 const updateProduct = AsyncErrorHandler(async (req, res, next) => {
 
   // 1. Get the product id from the params
@@ -153,6 +179,13 @@ const updateProduct = AsyncErrorHandler(async (req, res, next) => {
   });
 });
 
+/**
+ * Add quantity, price, and size to a product's product_list.
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 const addQuantityPrice = AsyncErrorHandler(async (req, res, next) => {
   // 1. Get the product id from the params
   const productId = req.params.id;
@@ -200,6 +233,13 @@ const addQuantityPrice = AsyncErrorHandler(async (req, res, next) => {
 });
 
 
+/**
+ * Remove a product's product_list item by size.
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 const deleteQuantityPrice = AsyncErrorHandler(async (req, res, next) => {
 
   // 1. Get the product id from the params
@@ -239,6 +279,13 @@ const deleteQuantityPrice = AsyncErrorHandler(async (req, res, next) => {
 
 });
 
+/**
+ * Delete a product by ID.
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 const deleteProduct = AsyncErrorHandler(async (req, res, next) => {
 
   // 1. Get the product id from the params

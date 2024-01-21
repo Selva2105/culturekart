@@ -10,14 +10,21 @@ const {
 } = require("../controller/Product/controller.product");
 const protect = require("../middleware/protectMiddleware");
 
+// Create an instance of Express Router
 const router = express.Router();
 
-router.route("/").post(protect,createProduct).get(getProducts);
-router.route("/category").get(getAllCaregory).patch(protect, updateProduct);
+// Routes for handling product operations
+router.route("/")
+  .post(protect, createProduct) // Create a new product (Protected Route)
+  .get(getProducts); // Get all products
+
+router.route("/category")
+  .get(getAllCaregory) // Get all product categories
+  .patch(protect, updateProduct); // Update product details (Protected Route)
 
 router.route("/:id")
-  .patch(protect, updateProduct)
-  .post(protect, addQuantityPrice)
-  .delete(protect, deleteQuantityPrice, deleteProduct);
+  .patch(protect, updateProduct) // Update product details (Protected Route)
+  .post(protect, addQuantityPrice) // Add quantity and price to a product (Protected Route)
+  .delete(protect, deleteQuantityPrice, deleteProduct); // Delete a product (Protected Route)
 
 module.exports = router;
