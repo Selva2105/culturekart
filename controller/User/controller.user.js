@@ -1,3 +1,4 @@
+const User = require("../../model/model.user");
 const AsyncErrorHandler = require("../../utils/asyncErrorHandler");
 const CustomError = require("../../utils/customError");
 
@@ -81,4 +82,32 @@ const kartHandler = AsyncErrorHandler(async (req, res, next) => {
     });
 });
 
-module.exports = { getUserDetailsById, wishlistHandler, kartHandler };
+/**
+ * Change the user to premium member to get premium access.
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
+const premiumUser = AsyncErrorHandler(async (req, res, next) => {
+
+    const user = req.user;
+
+    const dbUser = await User.findOne({ email: user.email });
+
+
+    // Mark the user as verified
+    await dbUser.changepToPremiumMember();
+
+    if (dbUser.premium_member) {
+        res.status(200).json({
+            status: 'success',
+            message: "Chief became premium member"
+        });
+    } else {
+        const error = new CustomError('Problem occured while changing user to premium menber', 500);
+        return next(error);
+    }
+})
+
+module.exports = { getUserDetailsById, wishlistHandler, kartHandler, premiumUser };

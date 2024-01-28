@@ -77,6 +77,11 @@ const userSchema = mongoose.Schema(
             enum: [true, false],
             default: false
         },
+        premium_member: {
+            type: Boolean,
+            enum: [true, false],
+            default: false
+        },
         wishlist: [
             {
                 product: {
@@ -144,19 +149,28 @@ userSchema.pre('save', async function (next) {
 })
 
 userSchema.methods.generateUserVerifyToken = async function () {
-    const VerifyToken = crypto.randomBytes(32).toString('hex');
-    const expireTime = Date.now() + 24 * 60 * 60 * 1000;
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    let expireTime = new Date();
+    
+    // Set expiration time to 2 days from today
+    expireTime.setDate(expireTime.getDate() + 2);
 
-    this.userVerifyToken = crypto.createHash('sha256').update(VerifyToken).digest('hex');
+    this.userVerifyToken = crypto.createHash('sha256').update(verifyToken).digest('hex');
     this.userVerifyTokenExpire = expireTime;
 
-    return VerifyToken;
+    return verifyToken;
 };
 
 userSchema.methods.markAsVerified = async function () {
     this.verified = true;
     this.userVerifyToken = undefined;
     this.userVerifyTokenExpire = undefined;
+
+    await this.save({ validateBeforeSave: false });
+};
+
+userSchema.methods.changepToPremiumMember = async function () {
+    this.premium_member = true;
 
     await this.save({ validateBeforeSave: false });
 };
