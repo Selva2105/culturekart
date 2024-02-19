@@ -22,9 +22,7 @@ const corsOptions = {
 };
 
 // Import routers for different API endpoints
-const productRouter = require("./router/router.product");
-const authRouter = require("./router/router.user");
-const logRouter = require("./router/router.auth");
+
 
 // Use JSON parsing middleware
 app.use(express.json());
@@ -35,6 +33,7 @@ app.use(cors(corsOptions));
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms'))
 // Root route to display a welcome message
 app.get('/', (req, res) => {
     res.send('Welcome to the root of the server!');
