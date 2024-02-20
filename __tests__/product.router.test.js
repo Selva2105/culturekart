@@ -8,6 +8,7 @@ beforeAll(async () => {
 });
 
 let productId;
+let variantId;
 
 describe('Product Routes', () => {
     describe('POST /api/v1/product', () => {
@@ -47,6 +48,7 @@ describe('Product Routes', () => {
             expect(response.body.product).toHaveProperty('name', productData.name);
 
             productId = response.body.product._id;
+            variantId = response.body.product.variants[0]._id;
         }, 30000);
 
     });
@@ -77,16 +79,21 @@ describe('Product Routes', () => {
         },30000);
     });
 
-    // describe('PATCH /api/v1/product/rating/:id', () => {
-    //     it('should add a rating to a product by ID and return 200 status', async () => {
-    //         const ratingData = { rating: 5 };
-    //         const response = await request(app).patch(`/api/v1/product/rating/${productId}`).send(ratingData);
-    //         expect(response.statusCode).toBe(200);
-    //         expect(response.body.status).toBe('success');
-    //         // Assuming your API returns the updated ratings array
-    //         expect(response.body.product.ratings).toContainEqual(expect.objectContaining(ratingData));
-    //     });
-    // });
+    describe('PATCH /api/v1/product/rating/:id', () => {
+        it('should add a rating to a product by ID and return 200 status', async () => {
+            const ratingData = {
+                "variantId": variantId,
+                "ratings": {
+                  "user": "60f7b9c7b6b4f20015e8c1d4",
+                  "rating": 5,
+                  "comment": "Super"
+                }
+              };
+            const response = await request(app).patch(`/api/v1/product/rating/${productId}`).send(ratingData);
+            expect(response.statusCode).toBe(200);
+            expect(response.body.status).toBe('success');
+        });
+    });
 
     describe('DELETE /api/v1/product/:id', () => {
         it('Should delete a product by ID and return 200 status', async () => {
