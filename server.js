@@ -5,6 +5,7 @@ const globalErrorHandler = require("./middleware/globalErrorhandler");
 const dotenv = require('dotenv');
 const path = require('path');
 const connectDB = require('./utils/connectDB');
+const morgan = require("morgan");
 
 dotenv.config({});
 
@@ -39,14 +40,8 @@ app.get('/', (req, res) => {
     res.send('Welcome to the root of the server!');
 });
 
-// Route handling for products API
-app.use("/api/v1/product", productRouter);
-
-// Route handling for user authentication API
-app.use("/api/v1/user", authRouter);
-
-// Route handling for authentication API
-app.use("/api/v1/auth", logRouter);
+app.use('/api/v1/auth',require('./router/auth.router'))
+app.use('/api/v1/product',require('./router/product.router'))
 
 // 404 route - Handles requests to undefined routes
 app.all("*", (req, res, next) => {
@@ -67,3 +62,5 @@ connectDB(DBURL);
 app.listen(PORT, () => {
     console.log(`Server is running on port: ${PORT}`);
 });
+
+module.exports = app;
