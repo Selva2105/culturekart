@@ -3,8 +3,6 @@ const request = require('supertest');
 const connectDB = require("../utils/connectDB");
 const app = require("../server");
 
-const DBURL = process.env.MONGO_URL;
-
 beforeAll(async () => {
     await connectDB("mongodb+srv://selvaganapathikanakaraj2105:FhidJdraQBaUJm7K@ecomcluster.p2asger.mongodb.net/ecom?retryWrites=true&w=majority");
 });
