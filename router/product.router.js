@@ -20,4 +20,15 @@ router.post('/', productValidators, (req, res, next) => {
     productController.createProduct(req, res, next);
 });
 
+router.get('/', productController.getAllProducts);
+router.get('/:id', productController.getProductById);
+
+// Route to update the product details by ID
+router.patch('/productDetails/:id', productController.updateProductById);
+
+// Route to update the product rating by ID
+router.patch('/rating/:id', productController.addRatingToProductById);
+router.delete('/:id', productController.deleteProductById);
+
 module.exports = router;
+

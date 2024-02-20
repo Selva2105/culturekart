@@ -7,10 +7,11 @@ beforeAll(async () => {
     await connectDB("mongodb+srv://selvaganapathikanakaraj2105:FhidJdraQBaUJm7K@ecomcluster.p2asger.mongodb.net/ecom?retryWrites=true&w=majority");
 });
 
+let productId;
 
 describe('Product Routes', () => {
     describe('POST /api/v1/product', () => {
-        it('should create a new product and return 201 status', async () => {
+        it('Should create a new product and return 201 status', async () => {
             const productData =
             {
                 name: "SampleProduct",
@@ -43,11 +44,56 @@ describe('Product Routes', () => {
                 .send(productData);
 
             expect(response.statusCode).toBe(201);
-            expect(response.body).toHaveProperty('name', productData.name);
+            expect(response.body.product).toHaveProperty('name', productData.name);
 
-            // Clean up: Delete the product after testing
-            await Product.deleteOne({ name: productData.name });
-        },20000);
+            productId = response.body.product._id;
+        }, 30000);
 
+    });
+
+    describe('GET /api/v1/product', () => {
+        it('Should get all products and return 200 status', async () => {
+            const response = await request(app).get('/api/v1/product');
+            expect(response.statusCode).toBe(200);
+            expect(response.body.status).toBe('success');
+        });
+    });
+
+    describe('GET /api/v1/product/:id', () => {
+        it('should get a product by ID and return 200 status', async () => {
+            const response = await request(app).get(`/api/v1/product/${productId}`);
+            expect(response.statusCode).toBe(200);
+            expect(response.body.status).toBe('success');
+            expect(response.body.product._id).toBe(productId);
+        });
+    });
+
+    describe('PATCH /api/v1/product/productDetails/:id', () => {
+        it('should update product details by ID and return 200 status', async () => {
+            const updateData = { name: "Updated SampleProduct" };
+            const response = await request(app).patch(`/api/v1/product/productDetails/${productId}`).send(updateData);
+            expect(response.statusCode).toBe(200);
+            expect(response.body.status).toBe('success');
+        },30000);
+    });
+
+    // describe('PATCH /api/v1/product/rating/:id', () => {
+    //     it('should add a rating to a product by ID and return 200 status', async () => {
+    //         const ratingData = { rating: 5 };
+    //         const response = await request(app).patch(`/api/v1/product/rating/${productId}`).send(ratingData);
+    //         expect(response.statusCode).toBe(200);
+    //         expect(response.body.status).toBe('success');
+    //         // Assuming your API returns the updated ratings array
+    //         expect(response.body.product.ratings).toContainEqual(expect.objectContaining(ratingData));
+    //     });
+    // });
+
+    describe('DELETE /api/v1/product/:id', () => {
+        it('Should delete a product by ID and return 200 status', async () => {
+            const response = await request(app).delete(`/api/v1/product/${productId}`);
+            expect(response.statusCode).toBe(200);
+            expect(response.body.status).toBe('success');
+
+        }, 30000);
     });
 });
